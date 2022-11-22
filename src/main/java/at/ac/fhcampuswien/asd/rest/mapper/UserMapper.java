@@ -1,21 +1,34 @@
 package at.ac.fhcampuswien.asd.rest.mapper;
 
 import at.ac.fhcampuswien.asd.entity.models.User;
-import at.ac.fhcampuswien.asd.rest.model.UserRegistrationDto;
+import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
+import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public class UserMapper {
 
-    public User toModel(UserRegistrationDto userRegistrationDto) {
+    public User inboundToModel(InboundUserRegistrationDto inboundUserRegistrationDto) {
 
         User user = User.builder()
-                .username(userRegistrationDto.getUsername())
-                .firstName(userRegistrationDto.getFirstName())
-                .lastName(userRegistrationDto.getLastName())
+                .username(inboundUserRegistrationDto.getUsername())
+                .firstName(inboundUserRegistrationDto.getFirstName())
+                .lastName(inboundUserRegistrationDto.getLastName())
                 .build();
-        user.setPassword(userRegistrationDto.getPassword());
+        user.setPassword(inboundUserRegistrationDto.getPassword());
         return user;
+
+    }
+
+    public OutboundUserRegistrationDto modelToOutboundDto(User user) {
+
+        return OutboundUserRegistrationDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build();
 
     }
 

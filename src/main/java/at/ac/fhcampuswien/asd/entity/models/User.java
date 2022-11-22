@@ -5,6 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -22,6 +23,8 @@ public class User {
     String firstName;
     String lastName;
     int failedLoginCounter = 0;
+    Long lockedUntil = null;
+    UUID session;
     private byte[] password;
     private byte[] salt;
 
