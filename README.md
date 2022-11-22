@@ -1,6 +1,6 @@
 # User Manager
 
-User Manager is a application which lets you register, login and change your password
+User Manager is an application which lets you register, login and change your password
 
 ## Table of contents
 
@@ -17,6 +17,7 @@ User Manager is a application which lets you register, login and change your pas
 <hr>  
 
 ## General infos
+
 * Marko Marjanovic
 * Thomas Scheibelhofer
 * Matthias Schmid-Kietreiber
@@ -31,32 +32,30 @@ In no form is any monetization or commercialisation off this application intende
 
 Project is created with:
 
-* Spring
-* Java v17
+* Spring Boot
+* Java 17
 
 ## Setup
 
 To start the project follow the following steps:
 
-* ...
-* ...
-* ...
+* Open IntelliJ
+* Add a 'Spring Boot' application configuration
+* Run the application
 
 ## Usage
 
-To use the functions of the application call the REST endpoints with the help of i.e. Postman
+To use the functions of the application call the REST endpoints with the help of i.e. Postman or directly in the
+provided interactive [Swagger documentation](http://localhost:8080/swagger-ui/index.html).
 
 ### Register
 
-* ...
-* ...
-* ...
+* /users/register
 
 ### Login
 
-* ...
-* ...
-* ...
+* /users/login
+* /users/logout/{username}
 
 ### Change Password
 
