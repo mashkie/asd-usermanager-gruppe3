@@ -53,7 +53,7 @@ public class UserEntityService {
         return userRepository.save(user);
     }
 
-    public User lockUser(User user) {
+    public User setLockTime(User user) {
 
         Long lockTime = new Date(new Date().getTime() + (1000 * 60)).getTime();
         user.setLockedUntil(lockTime);

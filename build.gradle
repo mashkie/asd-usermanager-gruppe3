@@ -32,8 +32,10 @@ dependencies {
 	implementation 'org.mapstruct:mapstruct:1.5.3.Final'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
 
-	// enables auto-reload
-	compileOnly("org.springframework.boot:spring-boot-devtools")
+	// https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
+	// https://lankydan.dev/documenting-a-spring-rest-api-following-the-openapi-specification
+	implementation 'io.swagger.core.v3:swagger-annotations:2.2.7'
+
 }
 
 tasks.named('test') {
