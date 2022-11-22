@@ -4,7 +4,7 @@ User Manager is an application which lets you register, login and change your pa
 
 ## Table of contents
 
-* [Group members](#general-info)
+* [Group members](#group-members)
 * [General info](#general-info)
 * [Technologies](#technologies)
 * [Setup](#setup)
@@ -16,7 +16,7 @@ User Manager is an application which lets you register, login and change your pa
 
 <hr>  
 
-## General infos
+## Group Members
 
 * Marko Marjanovic
 * Thomas Scheibelhofer
