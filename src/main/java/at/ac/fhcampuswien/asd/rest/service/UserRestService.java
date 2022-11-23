@@ -133,7 +133,7 @@ public class UserRestService {
     public void logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
 
         User user = checkUserExistence(username);
-        if (user.getSession() != session) {
+        if (!user.getSession().equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else {
             userEntityService.removeSessionId(user);
