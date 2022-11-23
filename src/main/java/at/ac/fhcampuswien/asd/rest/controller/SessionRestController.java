@@ -87,6 +87,7 @@ public class SessionRestController {
     public ResponseEntity<Object> logout(@PathVariable String username, HttpSession session) throws InvalidSessionException, UserNotFoundException {
 
         userService.logout(username, (UUID) session.getAttribute(sessionIdName));
+        session.removeAttribute(sessionIdName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

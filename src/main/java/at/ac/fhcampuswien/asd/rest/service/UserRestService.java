@@ -4,6 +4,7 @@ import at.ac.fhcampuswien.asd.entity.models.User;
 import at.ac.fhcampuswien.asd.entity.services.UserEntityService;
 import at.ac.fhcampuswien.asd.exceptions.*;
 import at.ac.fhcampuswien.asd.helper.Hashing;
+import at.ac.fhcampuswien.asd.rest.model.InboundUserChangePasswordDto;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
 import lombok.NonNull;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -153,5 +155,29 @@ public class UserRestService {
         return userEntityService.addUser(inboundUserRegistrationDto);
     }
 
+    /**
+     * Changes the password of the user in the database.
+     *
+     * @param username                     The username of the users for which to end the session.
+     * @param inboundUserChangePasswordDto Specifies information required for the password change.
+     * @param session                      The session id of the session to end.
+     * @return Returns an outbound representation of the user.
+     * @throws InvalidSessionException  In case the session does not match the users' session.
+     * @throws UserNotFoundException    In case the user does not exist.
+     * @throws InvalidPasswordException In case the specified password is incorrect.
+     * @throws InvalidPasswordException In case the new password does not match the control new password
+     */
+    public void changePassword(String username, InboundUserChangePasswordDto inboundUserChangePasswordDto, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+        User user = checkUserExistence(username);
+        if (session == null || !user.getSession().equals(session)) {
+            throw new InvalidSessionException("The session for the user is invalid.");
+        } else if (!comparePassword(user, inboundUserChangePasswordDto.getOldPassword())) {
+            throw new InvalidPasswordException("The old password is not correct!");
+        } else if (!inboundUserChangePasswordDto.getNewPassword().equals(inboundUserChangePasswordDto.getControlNewPassword())) {
+            throw new InvalidPasswordException("The two new passwords do not match!");
+        } else {
+            userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
+        }
+    }
 
 }

@@ -74,4 +74,9 @@ public class UserEntityService {
         return userRepository.save(user);
     }
 
+    public User setPassword(User user, String password) {
+        user.setPassword(password);
+        return userRepository.save(user);
+    }
+
 }
