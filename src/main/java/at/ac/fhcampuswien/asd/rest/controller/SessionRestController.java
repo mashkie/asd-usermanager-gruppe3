@@ -1,9 +1,6 @@
 package at.ac.fhcampuswien.asd.rest.controller;
 
-import at.ac.fhcampuswien.asd.exceptions.InvalidPasswordException;
-import at.ac.fhcampuswien.asd.exceptions.InvalidSessionException;
-import at.ac.fhcampuswien.asd.exceptions.UserLockedException;
-import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
+import at.ac.fhcampuswien.asd.exceptions.*;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserLoginDto;
 import at.ac.fhcampuswien.asd.rest.service.UserRestService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,9 +33,8 @@ public class SessionRestController {
      * @param inboundUserLoginDto Specified username and password.
      * @param session             HTTP Session object
      * @return Returns OK.
-     * @throws UserNotFoundException    In case the user does not exist.
      * @throws UserLockedException      In case the user is locked.
-     * @throws InvalidPasswordException In case the specified password is invalid.
+     * @throws AuthenticationException In case the user or password are not correct
      */
 
     @PostMapping("/login")
@@ -50,12 +46,11 @@ public class SessionRestController {
                             description = "OK",
                             responseCode = "200"
                     ),
-                    @ApiResponse(description = "User not found", responseCode = "404", content = @Content),
                     @ApiResponse(description = "User locked", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Invalid password", responseCode = "401", content = @Content)
+                    @ApiResponse(description = "User or password not correct", responseCode = "401", content = @Content)
             }
     )
-    public ResponseEntity<Object> login(@RequestBody InboundUserLoginDto inboundUserLoginDto, HttpSession session) throws UserNotFoundException, UserLockedException, InvalidPasswordException {
+    public ResponseEntity<Object> login(@RequestBody InboundUserLoginDto inboundUserLoginDto, HttpSession session) throws AuthenticationException, UserLockedException {
 
         UUID sessionID = UUID.randomUUID();
         session.setAttribute(sessionIdName, sessionID);

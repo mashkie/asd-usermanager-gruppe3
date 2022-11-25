@@ -36,7 +36,7 @@ public class UserEntityService {
 
     public OutboundUserRegistrationDto addUser(InboundUserRegistrationDto userDto) throws UserAlreadyExistsException {
         if (checkUserExistence(userDto.getUsername())) {
-            throw new UserAlreadyExistsException("The username is already taken!");
+            throw new UserAlreadyExistsException("Der Benutzername ist bereits vergeben");
         }
         User user = userMapper.inboundToModel(userDto);
         userRepository.save(user);

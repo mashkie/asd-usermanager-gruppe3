@@ -41,14 +41,18 @@ public class UserRestService {
      * @param username  The username used ot identify the user.
      * @param password  The password for the specified user.
      * @param sessionId The sessionId stored in the HTTPSession.
-     * @throws UserNotFoundException    In case the user does not exist.
-     * @throws UserLockedException      In case the user is locked.
-     * @throws InvalidPasswordException In case the specified password is incorrect.
+     * @throws UserLockedException     In case the user is locked.
+     * @throws AuthenticationException In case the specified password or username is incorrect.
      */
-    public void login(String username, String password, UUID sessionId) throws UserNotFoundException, UserLockedException, InvalidPasswordException {
-        User user = checkUserExistence(username);
+    public void login(String username, String password, UUID sessionId) throws AuthenticationException, UserLockedException {
+        User user = null;
+        try {
+            user = checkUserExistence(username);
+            checkPassword(password, user);
+        } catch (UserNotFoundException | InvalidPasswordException e) {
+            throw new AuthenticationException("Benutzername oder Passwort nicht korrekt");
+        }
         checkLockedStatus(user);
-        checkPassword(password, user);
         resetLock(user);
         resetFailedLoginCounter(user);
         userEntityService.setSessionId(user, sessionId);
@@ -86,7 +90,7 @@ public class UserRestService {
     private User checkUserExistence(String username) throws UserNotFoundException {
         User user = userEntityService.getUserByUsername(username);
         if (user == null) {
-            throw new UserNotFoundException("This user does not exist!");
+            throw new UserNotFoundException("Der Benutzer existiert nicht");
         }
         return user;
     }
@@ -104,7 +108,7 @@ public class UserRestService {
             if (user.getFailedLoginCounter() >= 4) {
                 userEntityService.setLockTime(user);
             }
-            throw new InvalidPasswordException("The password is not correct!");
+            throw new InvalidPasswordException("Das Passwort ist nicht korrekt");
         }
     }
 
@@ -116,7 +120,7 @@ public class UserRestService {
      */
     private void checkLockedStatus(User user) throws UserLockedException {
         if (user.getLockedUntil() != null && user.getLockedUntil() > new Date().getTime()) {
-            throw new UserLockedException("The user is locked, login will be possible at " + new Date(user.getLockedUntil()));
+            throw new UserLockedException("Benutzer bis zum " + new Date(user.getLockedUntil()) + "Uhr gesperrt");
         }
     }
 
@@ -131,7 +135,7 @@ public class UserRestService {
     public void logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
         User user = checkUserExistence(username);
         if (!user.getSession().equals(session)) {
-            throw new InvalidSessionException("The session for the user is invalid.");
+            throw new InvalidSessionException("Die Session des Benutzers ist nicht valide");
         } else {
             userEntityService.removeSessionId(user);
         }
@@ -170,9 +174,9 @@ public class UserRestService {
         if (!user.getSession().equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else if (!comparePassword(user, inboundUserChangePasswordDto.getOldPassword())) {
-            throw new InvalidPasswordException("The old password is not correct!");
+            throw new InvalidPasswordException("Passwort ist nicht korrekt");
         } else if (!inboundUserChangePasswordDto.getNewPassword().equals(inboundUserChangePasswordDto.getControlNewPassword())) {
-            throw new InvalidPasswordException("The two new passwords do not match!");
+            throw new InvalidPasswordException("Passwörter stimmen nicht überein");
         } else {
             userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
         }
