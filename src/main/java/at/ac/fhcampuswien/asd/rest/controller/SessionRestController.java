@@ -71,7 +71,7 @@ public class SessionRestController {
      * @throws UserNotFoundException   In case the user does not exist.
      */
 
-    @PostMapping("/logout/{username}")
+    @PostMapping("/{username}/logout")
     @Operation(
             summary = "Logs out a user.",
             tags = {"Users"},

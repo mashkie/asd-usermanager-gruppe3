@@ -36,7 +36,7 @@ public class PasswordChangeRestController {
      * @throws UserNotFoundException   In case the user does not exist.
      */
 
-    @PostMapping("/change-password/{username}")
+    @PostMapping("/{username}/change-password")
     @Operation(
             summary = "Change password of a user.",
             tags = {"Users"},
@@ -47,7 +47,6 @@ public class PasswordChangeRestController {
                     ),
                     @ApiResponse(description = "User not found", responseCode = "404", content = @Content),
                     @ApiResponse(description = "Invalid session", responseCode = "401", content = @Content),
-                    @ApiResponse(description = "Invalid password", responseCode = "401", content = @Content),
                     @ApiResponse(description = "Invalid password", responseCode = "401", content = @Content),
             }
     )
