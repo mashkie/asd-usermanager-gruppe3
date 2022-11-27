@@ -50,7 +50,7 @@ public class UserRestService {
             user = checkUserExistence(username);
             checkPassword(password, user);
         } catch (UserNotFoundException | InvalidPasswordException e) {
-            throw new AuthenticationException("Benutzername oder Passwort nicht korrekt");
+            throw new AuthenticationException("Username or password not correct");
         }
         checkLockedStatus(user);
         resetLock(user);
@@ -90,7 +90,7 @@ public class UserRestService {
     private User checkUserExistence(String username) throws UserNotFoundException {
         User user = userEntityService.getUserByUsername(username);
         if (user == null) {
-            throw new UserNotFoundException("Der Benutzer existiert nicht");
+            throw new UserNotFoundException("The user name does not exist!");
         }
         return user;
     }
@@ -108,7 +108,7 @@ public class UserRestService {
             if (user.getFailedLoginCounter() >= 4) {
                 userEntityService.setLockTime(user);
             }
-            throw new InvalidPasswordException("Das Passwort ist nicht korrekt");
+            throw new InvalidPasswordException("The password is not correct!");
         }
     }
 
@@ -120,7 +120,7 @@ public class UserRestService {
      */
     private void checkLockedStatus(User user) throws UserLockedException {
         if (user.getLockedUntil() != null && user.getLockedUntil() > new Date().getTime()) {
-            throw new UserLockedException("Benutzer bis zum " + new Date(user.getLockedUntil()) + "Uhr gesperrt");
+            throw new UserLockedException("The user is locked, login will be possible at" + new Date(user.getLockedUntil()));
         }
     }
 
@@ -135,7 +135,7 @@ public class UserRestService {
     public void logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
         User user = checkUserExistence(username);
         if (!user.getSession().equals(session)) {
-            throw new InvalidSessionException("Die Session des Benutzers ist nicht valide");
+            throw new InvalidSessionException("The session for the user is invalid.");
         } else {
             userEntityService.removeSessionId(user);
         }
@@ -171,12 +171,11 @@ public class UserRestService {
             throw new InvalidSessionException("There is no valid session active");
         }
         User user = checkUserExistence(username);
+        checkPassword(inboundUserChangePasswordDto.getOldPassword(), user);
         if (!user.getSession().equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
-        } else if (!comparePassword(user, inboundUserChangePasswordDto.getOldPassword())) {
-            throw new InvalidPasswordException("Passwort ist nicht korrekt");
         } else if (!inboundUserChangePasswordDto.getNewPassword().equals(inboundUserChangePasswordDto.getControlNewPassword())) {
-            throw new InvalidPasswordException("Passwörter stimmen nicht überein");
+            throw new InvalidPasswordException("Passwords do not match");
         } else {
             userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
         }

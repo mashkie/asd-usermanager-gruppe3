@@ -4,6 +4,7 @@ import at.ac.fhcampuswien.asd.exceptions.InvalidPasswordException;
 import at.ac.fhcampuswien.asd.exceptions.InvalidSessionException;
 import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserChangePasswordDto;
+import at.ac.fhcampuswien.asd.rest.model.ResponseMessage;
 import at.ac.fhcampuswien.asd.rest.service.UserRestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,7 +37,7 @@ public class PasswordChangeRestController {
      * @throws UserNotFoundException   In case the user does not exist.
      */
 
-    @PostMapping("/{username}/change-password")
+    @PutMapping("/{username}/password")
     @Operation(
             summary = "Change password of a user.",
             tags = {"Users"},
@@ -52,6 +53,6 @@ public class PasswordChangeRestController {
     )
     public ResponseEntity<Object> changePassword(@PathVariable String username, @RequestBody InboundUserChangePasswordDto inboundUserChangePasswordDto, HttpSession session) throws InvalidSessionException, UserNotFoundException, InvalidPasswordException {
         userService.changePassword(username, inboundUserChangePasswordDto, (UUID) session.getAttribute(sessionIdName));
-        return new ResponseEntity<>("Password was changed", HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseMessage("Password was changed"), HttpStatus.OK);
     }
 }
