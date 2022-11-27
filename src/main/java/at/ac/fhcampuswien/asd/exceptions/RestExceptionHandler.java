@@ -33,5 +33,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(new ResponseMessage(e.getMessage()));
     }
 
-
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<?> handleInvalidAuthentication(AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ResponseMessage(e.getMessage()));
+    }
 }
