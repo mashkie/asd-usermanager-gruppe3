@@ -47,14 +47,16 @@ public class DeletionRestController {
                             responseCode = "200",
                             content = @Content(mediaType = "application/json", schema = @Schema(implementation = OutboundUserRegistrationDto.class))
                     ),
-                    @ApiResponse(description = "User don`t exists", responseCode = "409", content = @Content)
+                    @ApiResponse(description = "User don`t exists", responseCode = "404", content = @Content)
             }
     )
-    @DeleteMapping("/users/remove/{username}")
+    @DeleteMapping("/users/{username}")
     public ResponseEntity<String> remove(@PathVariable String username,
                                          @RequestBody DeleteUserRequest deleteUserRequest,
                                          HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
         userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), session);
+        session.removeAttribute(username);
         return new ResponseEntity<>(HttpStatus.OK);
+
     }
 }

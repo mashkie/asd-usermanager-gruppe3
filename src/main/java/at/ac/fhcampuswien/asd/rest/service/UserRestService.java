@@ -203,7 +203,6 @@ public class UserRestService {
             throw new InvalidSessionException("You are not authorized to delete the account.");
         if (ObjectUtils.isEmpty(password) || !comparePassword(user, password))
             throw new InvalidPasswordException("Passwords do not match");
-        userEntityService.removeSessionId(user);
         userEntityService.removeUser(user);
     }
 }
