@@ -26,7 +26,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'com.h2database:h2:2.1.214'
 	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-	implementation 'org.springdoc:springdoc-openapi-ui:1.6.12'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.13'
 
 	// Mapstruct to handle mappers
 	implementation 'org.mapstruct:mapstruct:1.5.3.Final'
