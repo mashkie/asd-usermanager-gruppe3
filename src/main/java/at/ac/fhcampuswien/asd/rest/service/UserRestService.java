@@ -10,7 +10,9 @@ import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
+import javax.servlet.http.HttpSession;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -179,5 +181,28 @@ public class UserRestService {
         } else {
             userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
         }
+    }
+
+    /**
+     * Remove the user in the database
+     *
+     * @param username
+     * @param session
+     * @throws UserNotFoundException
+     * @throws InvalidSessionException
+     * @throws InvalidPasswordException
+     */
+
+    public void removeUserByUsername(String username, String password, HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+        if (session == null) {
+            throw new InvalidSessionException("There is no valid session active");
+        }
+        User user = checkUserExistence(username);
+        UUID sessionId = (UUID) session.getAttribute("X-SESSION-ID");
+        if (ObjectUtils.isEmpty(user.getSession()) || !sessionId.equals(user.getSession()))
+            throw new InvalidSessionException("You are not authorized to delete the account.");
+        if (ObjectUtils.isEmpty(password) || !comparePassword(user, password))
+            throw new InvalidPasswordException("Passwords do not match");
+        userEntityService.removeUser(user);
     }
 }

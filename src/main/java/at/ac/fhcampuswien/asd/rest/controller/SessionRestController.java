@@ -27,7 +27,7 @@ public class SessionRestController {
 
     UserRestService userService;
 
-    final String sessionIdName = "X-SESSION-ID";
+    final static String sessionIdName = "X-SESSION-ID";
 
     /**
      * @param inboundUserLoginDto Specified username and password.
