@@ -3,6 +3,7 @@ package at.ac.fhcampuswien.asd.entity.services;
 import at.ac.fhcampuswien.asd.entity.models.User;
 import at.ac.fhcampuswien.asd.entity.repository.UserRepository;
 import at.ac.fhcampuswien.asd.exceptions.UserAlreadyExistsException;
+import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
 import at.ac.fhcampuswien.asd.rest.mapper.UserMapper;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
@@ -77,6 +78,10 @@ public class UserEntityService {
     public User setPassword(User user, String password) {
         user.setPassword(password);
         return userRepository.save(user);
+    }
+    public OutboundUserRegistrationDto removeUser(User user) throws UserNotFoundException {
+        userRepository.delete(user);
+        return userMapper.modelToOutboundDto(user);
     }
 
 }
