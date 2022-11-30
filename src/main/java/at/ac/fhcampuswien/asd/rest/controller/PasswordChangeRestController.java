@@ -27,7 +27,7 @@ public class PasswordChangeRestController {
 
     UserRestService userService;
 
-    final String sessionIdName = "X-SESSION-ID";
+    final static String sessionIdName = "X-SESSION-ID";
 
     /**
      * @param username Specifies the user whose password should be changed

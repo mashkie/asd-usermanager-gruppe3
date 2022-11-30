@@ -32,6 +32,8 @@ public class DeletionRestController {
 
     UserRestService userRestService;
 
+    final static String sessionIdName = "X-SESSION-ID";
+
     /**
      * Registers the user in the database.
      *
@@ -55,7 +57,7 @@ public class DeletionRestController {
                                          @RequestBody DeleteUserRequest deleteUserRequest,
                                          HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
         userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), session);
-        session.removeAttribute(username);
+        session.removeAttribute(sessionIdName);
         return new ResponseEntity<>(HttpStatus.OK);
 
     }
