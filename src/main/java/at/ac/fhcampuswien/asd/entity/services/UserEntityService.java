@@ -84,4 +84,9 @@ public class UserEntityService {
         return userMapper.modelToOutboundDto(user);
     }
 
+    public User setSessionValidUntil(User user, Long currentTime) {
+        user.setSessionValidUntil(currentTime);
+        return userRepository.save(user);
+    }
+
 }

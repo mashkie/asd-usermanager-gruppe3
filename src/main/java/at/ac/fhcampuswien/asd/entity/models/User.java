@@ -19,11 +19,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
+    final Long VALID_SESSION_TIME = 120 * 1000L;
     String username;
     String firstName;
     String lastName;
     int failedLoginCounter = 0;
     Long lockedUntil = null;
+    Long sessionValidUntil;
     UUID session;
     private byte[] password;
     private byte[] salt;
@@ -42,5 +44,9 @@ public class User {
         ArrayList<byte[]> list = Hashing.generateHash(password);
         this.salt = list.get(0);
         this.password = list.get(1);
+    }
+
+    public void setSessionValidUntil(Long currentTime) {
+        this.sessionValidUntil = currentTime + VALID_SESSION_TIME;
     }
 }

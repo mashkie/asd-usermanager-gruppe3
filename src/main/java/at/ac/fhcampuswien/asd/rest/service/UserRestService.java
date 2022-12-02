@@ -38,6 +38,48 @@ public class UserRestService {
     }
 
     /**
+     * Compares the time on user action with the time the session is supposed to be valid
+     *
+     * @param user        The user for which the time is compared
+     * @param currentTime The time the user interaction was carried out
+     * @return Returns true if the currentTime is bellow the time of the session validity
+     */
+    public boolean sessionValid(User user, Long currentTime) throws InvalidSessionException {
+        if (user.getSessionValidUntil() == null) {
+            throw new InvalidSessionException("The session for the user is invalid.");
+        }
+        return currentTime < user.getSessionValidUntil();
+    }
+
+    /**
+     * Sets the time until the users session is valid
+     *
+     * @param user        The user which session time is set
+     * @param currentTime The time a user interaction was carried out
+     */
+    public void setSessionValidUntil(User user, Long currentTime) {
+        user.setSessionValidUntil(currentTime);
+    }
+
+    /**
+     * Removes the session id of the user if his session is no longer valid
+     *
+     * @param user        The user that is to be logged out
+     * @param currentTime The time of user interaction
+     * @throws InvalidSessionException Is throws if the session is no longer valid
+     */
+    public void logoutUserOnInvalidSession(User user, Long currentTime) throws InvalidSessionException {
+        if (!sessionValid(user, currentTime)) {
+            userEntityService.removeSessionId(user);
+            throw new InvalidSessionException("The session for the user is invalid.");
+        }
+    }
+
+    public Long getCurrentTime() {
+        return new Date().getTime();
+    }
+
+    /**
      * Logs in the user.
      *
      * @param username  The username used ot identify the user.
@@ -58,6 +100,7 @@ public class UserRestService {
         resetLock(user);
         resetFailedLoginCounter(user);
         userEntityService.setSessionId(user, sessionId);
+        userEntityService.setSessionValidUntil(user, getCurrentTime());
     }
 
     /**
@@ -136,6 +179,7 @@ public class UserRestService {
      */
     public void logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
         User user = checkUserExistence(username);
+        logoutUserOnInvalidSession(user, getCurrentTime());
         if (!user.getSession().equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else {
@@ -162,7 +206,7 @@ public class UserRestService {
      * @param username                     The username of the users for which to end the session.
      * @param inboundUserChangePasswordDto Specifies information required for the password change.
      * @param session                      The session id of the session to end.
-     * @throws InvalidSessionException  In case there is no active seesion.
+     * @throws InvalidSessionException  In case there is no active session.
      * @throws InvalidSessionException  In case the session does not match the users' session.
      * @throws UserNotFoundException    In case the user does not exist.
      * @throws InvalidPasswordException In case the specified password is incorrect.
@@ -173,6 +217,8 @@ public class UserRestService {
             throw new InvalidSessionException("There is no valid session active");
         }
         User user = checkUserExistence(username);
+        logoutUserOnInvalidSession(user, getCurrentTime());
+        userEntityService.setSessionValidUntil(user, getCurrentTime());
         checkPassword(inboundUserChangePasswordDto.getOldPassword(), user);
         if (!user.getSession().equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
@@ -198,6 +244,7 @@ public class UserRestService {
             throw new InvalidSessionException("There is no valid session active");
         }
         User user = checkUserExistence(username);
+        logoutUserOnInvalidSession(user, getCurrentTime());
         UUID sessionId = (UUID) session.getAttribute("X-SESSION-ID");
         if (ObjectUtils.isEmpty(user.getSession()) || !sessionId.equals(user.getSession()))
             throw new InvalidSessionException("You are not authorized to delete the account.");
