@@ -9,6 +9,7 @@ import at.ac.fhcampuswien.asd.rest.service.UserRestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,8 @@ import java.util.UUID;
 @RestController
 @CrossOrigin
 @RequiredArgsConstructor
+@RequestMapping("users")
+@Tag(name = "Users", description = "Endpoints for managing users")
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class PasswordChangeRestController {
 

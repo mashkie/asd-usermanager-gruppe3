@@ -59,12 +59,8 @@ provided interactive [Swagger documentation](http://localhost:8080/swagger-ui/in
 
 ### Change Password
 
-* ...
-* ...
-* ...
+* /users/{username}/password
 
 ### Delete Account
 
-* /users/register
-* /users/login
-* /users/remove/{username}
+* /users/{username}
