@@ -5,6 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -46,7 +47,7 @@ public class User {
         this.password = list.get(1);
     }
 
-    public void setSessionValidUntil(Long currentTime) {
-        this.sessionValidUntil = currentTime + VALID_SESSION_TIME;
+    public void refreshSession() {
+        this.sessionValidUntil = new Date().getTime() + VALID_SESSION_TIME;
     }
 }
