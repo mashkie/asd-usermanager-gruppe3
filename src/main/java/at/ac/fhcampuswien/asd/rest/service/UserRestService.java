@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import javax.servlet.http.HttpSession;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -40,10 +39,10 @@ public class UserRestService {
     /**
      * Compares the time on user action with the time the session is supposed to be valid
      *
-     * @param user        The user for which the time is compared
+     * @param user The user for which the time is compared
      * @return Returns true if the currentTime is bellow the time of the session validity
      */
-    public boolean sessionValid(User user) throws InvalidSessionException {
+    public boolean sessionStillValid(User user) throws InvalidSessionException {
         if (user.getSessionValidUntil() == null) {
             throw new InvalidSessionException("The session for the user is invalid.");
         }
@@ -54,11 +53,11 @@ public class UserRestService {
     /**
      * Removes the session id of the user if his session is no longer valid
      *
-     * @param user        The user that is to be logged out
+     * @param user The user that is to be logged out
      * @throws InvalidSessionException Is throws if the session is no longer valid
      */
     public void logoutUserOnInvalidSession(User user) throws InvalidSessionException {
-        if (!sessionValid(user)) {
+        if (!sessionStillValid(user)) {
             userEntityService.removeSessionId(user);
             throw new InvalidSessionException("The session for the user is invalid.");
         }
@@ -73,7 +72,7 @@ public class UserRestService {
      * @throws UserLockedException     In case the user is locked.
      * @throws AuthenticationException In case the specified password or username is incorrect.
      */
-    public void login(String username, String password, UUID sessionId) throws AuthenticationException, UserLockedException {
+    public boolean login(String username, String password, UUID sessionId) throws AuthenticationException, UserLockedException {
         User user = null;
         try {
             user = checkUserExistence(username);
@@ -86,6 +85,7 @@ public class UserRestService {
         resetFailedLoginCounter(user);
         userEntityService.setSessionId(user, sessionId);
         userEntityService.setSessionValidUntil(user);
+        return true;
     }
 
     /**
@@ -162,15 +162,16 @@ public class UserRestService {
      * @throws InvalidSessionException In case the session does not match the users session.
      * @throws UserNotFoundException   In case the user does not exist.
      */
-    public void logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
+    public boolean logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
         User user = checkUserExistence(username);
         logoutUserOnInvalidSession(user);
-        if (!user.getSession().equals(session)) {
+        if (!user.getSession()
+                .equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else {
             userEntityService.removeSessionId(user);
         }
-
+        return true;
     }
 
     /**
@@ -205,9 +206,11 @@ public class UserRestService {
         logoutUserOnInvalidSession(user);
         userEntityService.setSessionValidUntil(user);
         checkPassword(inboundUserChangePasswordDto.getOldPassword(), user);
-        if (!user.getSession().equals(session)) {
+        if (!user.getSession()
+                .equals(session)) {
             throw new InvalidSessionException("The session for the user is invalid.");
-        } else if (!inboundUserChangePasswordDto.getNewPassword().equals(inboundUserChangePasswordDto.getControlNewPassword())) {
+        } else if (!inboundUserChangePasswordDto.getNewPassword()
+                .equals(inboundUserChangePasswordDto.getControlNewPassword())) {
             throw new InvalidPasswordException("Passwords do not match");
         } else {
             userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
@@ -224,14 +227,13 @@ public class UserRestService {
      * @throws InvalidPasswordException
      */
 
-    public void removeUserByUsername(String username, String password, HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+    public void removeUserByUsername(String username, String password, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
         if (session == null) {
             throw new InvalidSessionException("There is no valid session active");
         }
         User user = checkUserExistence(username);
         logoutUserOnInvalidSession(user);
-        UUID sessionId = (UUID) session.getAttribute("X-SESSION-ID");
-        if (ObjectUtils.isEmpty(user.getSession()) || !sessionId.equals(user.getSession()))
+        if (ObjectUtils.isEmpty(user.getSession()) || !session.equals(user.getSession()))
             throw new InvalidSessionException("You are not authorized to delete the account.");
         if (ObjectUtils.isEmpty(password) || !comparePassword(user, password))
             throw new InvalidPasswordException("Passwords do not match");
