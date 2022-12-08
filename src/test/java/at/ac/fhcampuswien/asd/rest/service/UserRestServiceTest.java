@@ -58,7 +58,6 @@ class UserRestServiceTest {
 
     }
 
-
     @Test
     void comparePassword() {
         // Act
@@ -87,6 +86,7 @@ class UserRestServiceTest {
 
     @Test
     void logoutUserOnInvalidSession() {
+        user.setSessionValidUntil(null);
         // Act && Assert
         Assertions.assertThrows(InvalidSessionException.class, () -> userRestService.logoutUserOnInvalidSession(user));
 
@@ -116,6 +116,17 @@ class UserRestServiceTest {
     @Test
     void loginWithInvalidPassword() {
         Assertions.assertThrows(AuthenticationException.class, () -> userRestService.login(username, "wrongPassword", sessionId));
+    }
+
+    @Test
+    void loginWithLockedUser() {
+
+        user.setLockedUntil(new Date().getTime() * 2);
+
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+        Assertions.assertThrows(UserLockedException.class, () -> userRestService.login(username, password, sessionId));
     }
 
     @Test
@@ -195,7 +206,6 @@ class UserRestServiceTest {
                 .lastName(lastname)
                 .build();
 
-        OutboundUserRegistrationDto outboundUserRegistrationDto = userMapper.modelToOutboundDto(user);
 
         try {
             Mockito.when(userEntityService.addUser(inboundUserRegistrationDto)).thenThrow(UserAlreadyExistsException.class);
@@ -220,9 +230,6 @@ class UserRestServiceTest {
         Mockito.when(userEntityService.getUserByUsername(username))
                 .thenReturn(user);
 
-        Mockito.when(userEntityService.incrementFailedLoginCount(user))
-                .thenReturn(user);
-
 
         // Act
         boolean passwordChanged;
@@ -234,7 +241,21 @@ class UserRestServiceTest {
 
         // Assert
         Assertions.assertTrue(passwordChanged);
+    }
 
+    @Test
+    void changePasswordWithInvalidPassword() {
+        InboundUserChangePasswordDto inboundUserChangePasswordDto = InboundUserChangePasswordDto.builder()
+                .oldPassword("password")
+                .newPassword("newPassword")
+                .controlNewPassword("newerPassword")
+                .build();
+
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+
+        Assertions.assertThrows(InvalidPasswordException.class, () -> userRestService.changePassword(username, inboundUserChangePasswordDto, sessionId));
     }
 
 
@@ -245,7 +266,7 @@ class UserRestServiceTest {
 
         boolean userRemoved;
         try {
-            userRemoved = userRestService.removeUserByUsername(username,password, sessionId);
+            userRemoved = userRestService.removeUserByUsername(username, password, sessionId);
         } catch (UserNotFoundException | InvalidSessionException | InvalidPasswordException e) {
             throw new RuntimeException(e);
         }
