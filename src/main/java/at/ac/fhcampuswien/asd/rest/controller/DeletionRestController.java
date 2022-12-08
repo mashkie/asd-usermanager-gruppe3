@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin
@@ -54,9 +56,10 @@ public class DeletionRestController {
     )
     @DeleteMapping("/users/{username}")
     public ResponseEntity<String> remove(@PathVariable String username,
-                                         @RequestBody DeleteUserRequest deleteUserRequest,
+                                         @RequestBody @Valid DeleteUserRequest deleteUserRequest,
                                          HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
-        userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), session);
+
+        userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), (UUID) session.getAttribute(sessionIdName));
         session.removeAttribute(sessionIdName);
         return new ResponseEntity<>(HttpStatus.OK);
 
