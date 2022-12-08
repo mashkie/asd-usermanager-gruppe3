@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import java.util.UUID;
 
 @RestController
@@ -54,7 +55,7 @@ public class PasswordChangeRestController {
                     @ApiResponse(description = "Invalid password", responseCode = "401", content = @Content),
             }
     )
-    public ResponseEntity<Object> changePassword(@PathVariable String username, @RequestBody InboundUserChangePasswordDto inboundUserChangePasswordDto, HttpSession session) throws InvalidSessionException, UserNotFoundException, InvalidPasswordException {
+    public ResponseEntity<Object> changePassword(@PathVariable String username, @Valid @RequestBody InboundUserChangePasswordDto inboundUserChangePasswordDto, HttpSession session) throws InvalidSessionException, UserNotFoundException, InvalidPasswordException {
         userService.changePassword(username, inboundUserChangePasswordDto, (UUID) session.getAttribute(sessionIdName));
         return new ResponseEntity<>(new ResponseMessage("Password was changed"), HttpStatus.OK);
     }

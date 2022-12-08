@@ -7,6 +7,7 @@ import at.ac.fhcampuswien.asd.exceptions.InvalidSessionException;
 import at.ac.fhcampuswien.asd.exceptions.UserLockedException;
 import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
 import org.junit.jupiter.api.*;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ class UserRestServiceTest {
     String firstname = "thomas";
     String lastname = "scheibelhofer";
     @Autowired
+    @InjectMocks
     UserRestService userRestService;
     @Mock
     UserEntityService userEntityService;
@@ -161,7 +163,6 @@ class UserRestServiceTest {
         }
 
         // Assert
-
 
 
     }
