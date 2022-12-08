@@ -29,7 +29,6 @@ public class UserMapper {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .build();
-
     }
 
 }

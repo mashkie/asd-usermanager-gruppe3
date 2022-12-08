@@ -2,15 +2,15 @@ package at.ac.fhcampuswien.asd.rest.service;
 
 import at.ac.fhcampuswien.asd.entity.models.User;
 import at.ac.fhcampuswien.asd.entity.services.UserEntityService;
-import at.ac.fhcampuswien.asd.exceptions.AuthenticationException;
-import at.ac.fhcampuswien.asd.exceptions.InvalidSessionException;
-import at.ac.fhcampuswien.asd.exceptions.UserLockedException;
-import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
+import at.ac.fhcampuswien.asd.exceptions.*;
+import at.ac.fhcampuswien.asd.rest.mapper.UserMapper;
+import at.ac.fhcampuswien.asd.rest.model.InboundUserChangePasswordDto;
+import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
+import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
 import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
@@ -25,13 +25,13 @@ class UserRestServiceTest {
     String username = "username";
     String firstname = "thomas";
     String lastname = "scheibelhofer";
-    @Autowired
-    @InjectMocks
-    UserRestService userRestService;
     @Mock
     UserEntityService userEntityService;
+    @InjectMocks
+    UserRestService userRestService;
 
-    User dbUser;
+
+    User user;
 
 
     @BeforeAll
@@ -41,17 +41,15 @@ class UserRestServiceTest {
 
     @BeforeEach
     void setUp() {
-
-
         // Create the user in the DB
-        dbUser = User.builder()
+        user = User.builder()
                 .username(username)
                 .firstName(firstname)
                 .lastName(lastname)
                 .session(sessionId)
                 .sessionValidUntil(sessionValidUntil)
                 .build();
-        dbUser.setPassword(password);
+        user.setPassword(password);
 
     }
 
@@ -60,18 +58,8 @@ class UserRestServiceTest {
 
     }
 
-
     @Test
     void comparePassword() {
-        // Arrange
-        User user = User.builder()
-                .username(username)
-                .firstName(firstname)
-                .lastName(lastname)
-                .session(sessionId)
-                .build();
-        user.setPassword(password);
-
         // Act
         boolean passwordsAreEqual = userRestService.comparePassword(user, password);
 
@@ -82,15 +70,6 @@ class UserRestServiceTest {
 
     @Test
     void sessionValid() {
-        // Arrange
-        User user = User.builder()
-                .username(username)
-                .firstName(firstname)
-                .lastName(lastname)
-                .session(sessionId)
-                .build();
-        user.setPassword(password);
-        user.setSessionValidUntil(new Date().getTime() + 1000 * 60 * 60);
 
         // Act
         boolean sessionIsValid;
@@ -107,21 +86,7 @@ class UserRestServiceTest {
 
     @Test
     void logoutUserOnInvalidSession() {
-        // Arrange
-        User user = User.builder()
-                .username(username)
-                .firstName(firstname)
-                .lastName(lastname)
-                .session(sessionId)
-                .build();
-        user.setPassword(password);
-        user.setSessionValidUntil(new Date().getTime());
-
-/*        // Manipulate the user in the DB
-        User dbUser = userRepository.findByUsername(username);
-        dbUser.setSessionValidUntil(new Date().getTime() - 1000 * 60);
-        userRepository.save(dbUser);*/
-
+        user.setSessionValidUntil(null);
         // Act && Assert
         Assertions.assertThrows(InvalidSessionException.class, () -> userRestService.logoutUserOnInvalidSession(user));
 
@@ -132,14 +97,14 @@ class UserRestServiceTest {
 
         // Arrange
         boolean userIsLoggedIn;
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
 
         // Act
 
         try {
             userIsLoggedIn = userRestService.login(username, password, sessionId);
-        } catch (AuthenticationException e) {
-            throw new RuntimeException(e);
-        } catch (UserLockedException e) {
+        } catch (AuthenticationException | UserLockedException e) {
             throw new RuntimeException(e);
         }
 
@@ -149,11 +114,27 @@ class UserRestServiceTest {
     }
 
     @Test
+    void loginWithInvalidPassword() {
+        Assertions.assertThrows(AuthenticationException.class, () -> userRestService.login(username, "wrongPassword", sessionId));
+    }
+
+    @Test
+    void loginWithLockedUser() {
+
+        user.setLockedUntil(new Date().getTime() * 2);
+
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+        Assertions.assertThrows(UserLockedException.class, () -> userRestService.login(username, password, sessionId));
+    }
+
+    @Test
     void logout() {
         // Arrange
         boolean userIsLoggedOut;
         Mockito.when(userEntityService.getUserByUsername(username))
-                .thenReturn(dbUser);
+                .thenReturn(user);
 
         // Act
         try {
@@ -163,53 +144,135 @@ class UserRestServiceTest {
         }
 
         // Assert
+        Assertions.assertTrue(userIsLoggedOut);
+    }
 
+    @Test
+    void logoutWithInvalidSession() {
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
 
+        Assertions.assertThrows(InvalidSessionException.class, () -> userRestService.logout(username, UUID.randomUUID()));
+    }
+
+    @Test
+    void logoutWithInvalidUsername() {
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+        Assertions.assertThrows(UserNotFoundException.class, () -> userRestService.logout("wrongUsername", sessionId));
     }
 
     @Test
     void createUser() {
 
         //Arrange
-/*                inboundUserRegistrationDto = InboundUserRegistrationDto.builder()
+        UserMapper userMapper = new UserMapper();
+        InboundUserRegistrationDto inboundUserRegistrationDto = InboundUserRegistrationDto.builder()
                 .username(username)
                 .password(password)
                 .firstName(firstname)
                 .lastName(lastname)
                 .build();
 
-        // Create the user in the DB
-        userRestService.createUser(inboundUserRegistrationDto);
+        OutboundUserRegistrationDto outboundUserRegistrationDto = userMapper.modelToOutboundDto(user);
 
+        try {
+            Mockito.when(userEntityService.addUser(inboundUserRegistrationDto)).thenReturn(outboundUserRegistrationDto);
+        } catch (UserAlreadyExistsException e) {
+            throw new RuntimeException(e);
+        }
 
         // Act
-        boolean createUser = userRestService.createUser(inBound);
+        OutboundUserRegistrationDto createUser;
+        try {
+            createUser = userRestService.createUser(inboundUserRegistrationDto);
+        } catch (UserAlreadyExistsException e) {
+            throw new RuntimeException(e);
+        }
 
         // Assert
-        Assertions.assertTrue(createUser);*/
-
+        Assertions.assertEquals(createUser, outboundUserRegistrationDto);
     }
+
+    @Test
+    void createUserWithExistingUsername() {
+        //Arrange
+        UserMapper userMapper = new UserMapper();
+        InboundUserRegistrationDto inboundUserRegistrationDto = InboundUserRegistrationDto.builder()
+                .username(username)
+                .password(password)
+                .firstName(firstname)
+                .lastName(lastname)
+                .build();
+
+
+        try {
+            Mockito.when(userEntityService.addUser(inboundUserRegistrationDto)).thenThrow(UserAlreadyExistsException.class);
+        } catch (UserAlreadyExistsException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Act
+        Assertions.assertThrows(UserAlreadyExistsException.class, () -> userRestService.createUser(inboundUserRegistrationDto));
+    }
+
 
     @Test
     void changePassword() {
         // Arrange
-//        User user = User.builder()
-//                .username(username)
-//                .firstName(firstname)
-//                .lastName(lastname)
-//                .build();
-//        user.setPassword(password);
-//        string
+        InboundUserChangePasswordDto inboundUserChangePasswordDto = InboundUserChangePasswordDto.builder()
+                .oldPassword("password")
+                .newPassword("newPassword")
+                .controlNewPassword("newPassword")
+                .build();
+
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
 
         // Act
+        boolean passwordChanged;
+        try {
+            passwordChanged = userRestService.changePassword(username, inboundUserChangePasswordDto, sessionId);
+        } catch (UserNotFoundException | InvalidSessionException | InvalidPasswordException e) {
+            throw new RuntimeException(e);
+        }
 
         // Assert
-
-        //Assertions.assertTrue();
-
+        Assertions.assertTrue(passwordChanged);
     }
 
     @Test
-    void removeUserByUsername() {
+    void changePasswordWithInvalidPassword() {
+        InboundUserChangePasswordDto inboundUserChangePasswordDto = InboundUserChangePasswordDto.builder()
+                .oldPassword("password")
+                .newPassword("newPassword")
+                .controlNewPassword("newerPassword")
+                .build();
+
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+
+        Assertions.assertThrows(InvalidPasswordException.class, () -> userRestService.changePassword(username, inboundUserChangePasswordDto, sessionId));
     }
+
+
+    @Test
+    void removeUserByUsername() {
+        Mockito.when(userEntityService.getUserByUsername(username))
+                .thenReturn(user);
+
+        boolean userRemoved;
+        try {
+            userRemoved = userRestService.removeUserByUsername(username, password, sessionId);
+        } catch (UserNotFoundException | InvalidSessionException | InvalidPasswordException e) {
+            throw new RuntimeException(e);
+        }
+
+        Assertions.assertTrue(userRemoved);
+
+    }
+
 }
