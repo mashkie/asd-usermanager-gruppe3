@@ -198,7 +198,7 @@ public class UserRestService {
      * @throws InvalidPasswordException In case the specified password is incorrect.
      * @throws InvalidPasswordException In case the new password does not match the control new password
      */
-    public void changePassword(String username, InboundUserChangePasswordDto inboundUserChangePasswordDto, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+    public boolean changePassword(String username, InboundUserChangePasswordDto inboundUserChangePasswordDto, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
         if (session == null) {
             throw new InvalidSessionException("There is no valid session active");
         }
@@ -214,6 +214,7 @@ public class UserRestService {
             throw new InvalidPasswordException("Passwords do not match");
         } else {
             userEntityService.setPassword(user, inboundUserChangePasswordDto.getNewPassword());
+            return true;
         }
     }
 
@@ -227,7 +228,7 @@ public class UserRestService {
      * @throws InvalidPasswordException
      */
 
-    public void removeUserByUsername(String username, String password, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+    public boolean removeUserByUsername(String username, String password, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
         if (session == null) {
             throw new InvalidSessionException("There is no valid session active");
         }
@@ -238,5 +239,6 @@ public class UserRestService {
         if (ObjectUtils.isEmpty(password) || !comparePassword(user, password))
             throw new InvalidPasswordException("Passwords do not match");
         userEntityService.removeUser(user);
+        return true;
     }
 }
