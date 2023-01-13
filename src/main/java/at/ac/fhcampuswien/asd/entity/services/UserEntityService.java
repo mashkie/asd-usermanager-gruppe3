@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 
@@ -56,7 +57,9 @@ public class UserEntityService {
 
     public User setLockTime(User user) {
 
-        Long lockTime = new Date(new Date().getTime() + (1000 * 60)).getTime();
+
+        Long lockTime = new Date(new Date().getTime() + Duration.ofSeconds(60)
+                .toMillis()).getTime();
         user.setLockedUntil(lockTime);
         return userRepository.save(user);
     }
@@ -70,6 +73,7 @@ public class UserEntityService {
         user.setSession(sessionId);
         return userRepository.save(user);
     }
+
     public User removeSessionId(User user) {
         user.setSession(null);
         return userRepository.save(user);
@@ -79,6 +83,7 @@ public class UserEntityService {
         user.setPassword(password);
         return userRepository.save(user);
     }
+
     public OutboundUserRegistrationDto removeUser(User user) throws UserNotFoundException {
         userRepository.delete(user);
         return userMapper.modelToOutboundDto(user);

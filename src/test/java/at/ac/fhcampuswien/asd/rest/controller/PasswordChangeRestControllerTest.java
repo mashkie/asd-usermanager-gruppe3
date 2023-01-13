@@ -1,7 +1,6 @@
 package at.ac.fhcampuswien.asd.rest.controller;
 
 import at.ac.fhcampuswien.asd.entity.repository.UserRepository;
-import at.ac.fhcampuswien.asd.entity.services.UserEntityService;
 import at.ac.fhcampuswien.asd.exceptions.UserAlreadyExistsException;
 import at.ac.fhcampuswien.asd.rest.mapper.UserMapper;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserChangePasswordDto;
@@ -11,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,28 +21,27 @@ import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class PasswordChangeRestControllerTest {
 
+    static UUID sessionId;
     final String password = "password";
     final String firstname = "firstname";
     final String lastname = "lastname";
     final String username = "username";
-
     final String X_SESSION_ID = "X-SESSION-ID";
-
     // End points
     final String CHANGE_PASSWORD_PATH = "/users/{username}/password";
     final String LOGIN_PATH = "/users/login";
     // Response Types
     final String APPLICATION_JSON = "application/json";
     final String CONTENT_TYPE = "Content-Type";
-
     @Autowired
     UserMapper userMapper;
     @Autowired
@@ -54,15 +51,7 @@ class PasswordChangeRestControllerTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserEntityService userEntityService;
-    @Mock
-    HttpSession httpSession;
-
-    @Autowired
     private UserRestService userRestService;
-
-    static UUID sessionId;
-
     @Autowired
     private WebApplicationContext webApplicationContext;
 

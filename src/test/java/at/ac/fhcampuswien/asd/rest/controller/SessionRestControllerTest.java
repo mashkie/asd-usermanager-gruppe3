@@ -29,13 +29,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class SessionRestControllerTest {
 
-    static UUID sessionId;
     final String correctPassword = "password";
     final String incorrectPassword = "1234";
     final String username = "username";
     final String firstname = "firstname";
     final String lastname = "lastname";
     private final String sessionFieldName = "X-SESSION-ID";
+    @Autowired
+    private HttpSession httpSession;
+    private UUID sessionId;
     @Autowired
     private ObjectMapper mapper;
     @Autowired
@@ -48,6 +50,8 @@ class SessionRestControllerTest {
 
     @BeforeEach
     void setUp() throws UserAlreadyExistsException {
+
+        sessionId = UUID.randomUUID();
         InboundUserRegistrationDto inboundUserRegistrationDto = InboundUserRegistrationDto.builder()
                 .username(username)
                 .password(correctPassword)
@@ -55,11 +59,11 @@ class SessionRestControllerTest {
                 .lastName(lastname)
                 .build();
         userRestService.createUser(inboundUserRegistrationDto);
-        sessionId = UUID.randomUUID();
     }
 
     @AfterEach
     void tearDown() {
+        httpSession.removeAttribute(sessionFieldName);
         userRepository.deleteAll();
     }
 
@@ -73,8 +77,9 @@ class SessionRestControllerTest {
                 .build();
 
         // Act && Assert
-        HttpSession httpSession = this.mockMvc.perform(post("/users/login").content(mapper.writeValueAsString(inboundUserLoginDto))
-                        .header("Content-Type", "application/json"))
+        HttpSession httpSession = this.mockMvc.perform(
+                        post("/users/login").content(mapper.writeValueAsString(inboundUserLoginDto))
+                                .header("Content-Type", "application/json"))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(jsonPath("$").doesNotExist())
@@ -128,12 +133,14 @@ class SessionRestControllerTest {
     void successfulLogout() throws Exception {
 
         // Arrange
-        userRestService.login(username, correctPassword, sessionId);
-        UUID session = userRepository.findByUsername(username)
+        httpSession.setAttribute(sessionFieldName, sessionId);
+        userRestService.login(username, correctPassword, httpSession);
+        UUID sessionId = userRepository.findByUsername(username)
                 .getSession();
 
         // Act && Assert
-        HttpSession responseSession = this.mockMvc.perform(post("/users/{username}/logout", username).sessionAttr(sessionFieldName, session))
+        HttpSession responseSession = this.mockMvc.perform(post("/users/{username}/logout", username)
+                        .sessionAttr(sessionFieldName, sessionId))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$").doesNotExist())
@@ -147,10 +154,12 @@ class SessionRestControllerTest {
     @Test
     void incorrectSessionOnLogout() throws Exception {
         // Arrange
-        userRestService.login(username, correctPassword, sessionId);
+        httpSession.setAttribute(sessionFieldName, sessionId);
+        userRestService.login(username, correctPassword, httpSession);
 
         // Act && Assert
-        this.mockMvc.perform(post("/users/{username}/logout", username).sessionAttr(sessionFieldName, UUID.randomUUID()))
+        this.mockMvc.perform(
+                        post("/users/{username}/logout", username).sessionAttr(sessionFieldName, UUID.randomUUID()))
                 .andExpect(status().isUnauthorized())
                 .andDo(print());
     }

@@ -2,8 +2,10 @@ package at.ac.fhcampuswien.asd.entity.models;
 
 import at.ac.fhcampuswien.asd.helper.Hashing;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
@@ -15,12 +17,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
 
+    final Long VALID_SESSION_TIME = Duration.ofMinutes(2)
+            .toMillis();
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
-    final Long VALID_SESSION_TIME = 120 * 1000L;
     String username;
     String firstName;
     String lastName;

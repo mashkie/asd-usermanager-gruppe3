@@ -3,10 +3,13 @@ package at.ac.fhcampuswien.asd.rest.mapper;
 import at.ac.fhcampuswien.asd.entity.models.User;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class UserMapper {
 
     public User inboundToModel(InboundUserRegistrationDto inboundUserRegistrationDto) {

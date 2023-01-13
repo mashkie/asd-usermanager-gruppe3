@@ -7,21 +7,24 @@ import at.ac.fhcampuswien.asd.helper.Hashing;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserChangePasswordDto;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
-import lombok.NonNull;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import javax.servlet.http.HttpSession;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class UserRestService {
 
-    @NonNull UserEntityService userEntityService;
-
+    final static String sessionIdName = "X-SESSION-ID";
+    UserEntityService userEntityService;
 
     /**
      * Compares the password specified by the user with the encrypted version in the database.
@@ -68,24 +71,23 @@ public class UserRestService {
      *
      * @param username  The username used ot identify the user.
      * @param password  The password for the specified user.
-     * @param sessionId The sessionId stored in the HTTPSession.
+     * @param session The HttpSession.
      * @throws UserLockedException     In case the user is locked.
      * @throws AuthenticationException In case the specified password or username is incorrect.
      */
-    public boolean login(String username, String password, UUID sessionId) throws AuthenticationException, UserLockedException {
+    public void login(String username, String password, HttpSession session) throws AuthenticationException, UserLockedException {
         User user = null;
         try {
-            user = checkUserExistence(username);
+            user = retrieveUser(username);
             checkPassword(password, user);
         } catch (UserNotFoundException | InvalidPasswordException e) {
             throw new AuthenticationException("Username or password not correct");
         }
-        checkLockedStatus(user);
+        ensureUserNotLocked(user);
         resetLock(user);
         resetFailedLoginCounter(user);
-        userEntityService.setSessionId(user, sessionId);
+        userEntityService.setSessionId(user, (UUID) session.getAttribute(sessionIdName));
         userEntityService.setSessionValidUntil(user);
-        return true;
     }
 
     /**
@@ -117,7 +119,7 @@ public class UserRestService {
      * @return Returns the User.
      * @throws UserNotFoundException In case the user is not found in the database.
      */
-    private User checkUserExistence(String username) throws UserNotFoundException {
+    private User retrieveUser(String username) throws UserNotFoundException {
         User user = userEntityService.getUserByUsername(username);
         if (user == null) {
             throw new UserNotFoundException("The user name does not exist!");
@@ -148,7 +150,7 @@ public class UserRestService {
      * @param user The user for which to check the locked status.
      * @throws UserLockedException In case the user is locked.
      */
-    private void checkLockedStatus(User user) throws UserLockedException {
+    private void ensureUserNotLocked(User user) throws UserLockedException {
         if (user.getLockedUntil() != null && user.getLockedUntil() > new Date().getTime()) {
             throw new UserLockedException("The user is locked, login will be possible at" + new Date(user.getLockedUntil()));
         }
@@ -158,15 +160,16 @@ public class UserRestService {
      * Ends the users' session.
      *
      * @param username The username of the users for which to end the session.
-     * @param session  The session id of the session to end.
+     * @param session  The HttpSession.
      * @throws InvalidSessionException In case the session does not match the users session.
      * @throws UserNotFoundException   In case the user does not exist.
      */
-    public boolean logout(String username, UUID session) throws InvalidSessionException, UserNotFoundException {
-        User user = checkUserExistence(username);
+    public boolean logout(String username, HttpSession session) throws InvalidSessionException, UserNotFoundException {
+        UUID sessionId = extractSessionId(session);
+        User user = retrieveUser(username);
         logoutUserOnInvalidSession(user);
         if (!user.getSession()
-                .equals(session)) {
+                .equals(sessionId)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else {
             userEntityService.removeSessionId(user);
@@ -191,23 +194,25 @@ public class UserRestService {
      *
      * @param username                     The username of the users for which to end the session.
      * @param inboundUserChangePasswordDto Specifies information required for the password change.
-     * @param session                      The session id of the session to end.
+     * @param session                      The HttpSession.
      * @throws InvalidSessionException  In case there is no active session.
      * @throws InvalidSessionException  In case the session does not match the users' session.
      * @throws UserNotFoundException    In case the user does not exist.
      * @throws InvalidPasswordException In case the specified password is incorrect.
      * @throws InvalidPasswordException In case the new password does not match the control new password
      */
-    public boolean changePassword(String username, InboundUserChangePasswordDto inboundUserChangePasswordDto, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
-        if (session == null) {
+    public boolean changePassword(String username, InboundUserChangePasswordDto inboundUserChangePasswordDto, HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+
+        UUID sessionId = extractSessionId(session);
+        if (sessionId == null) {
             throw new InvalidSessionException("There is no valid session active");
         }
-        User user = checkUserExistence(username);
+        User user = retrieveUser(username);
         logoutUserOnInvalidSession(user);
         userEntityService.setSessionValidUntil(user);
         checkPassword(inboundUserChangePasswordDto.getOldPassword(), user);
         if (!user.getSession()
-                .equals(session)) {
+                .equals(sessionId)) {
             throw new InvalidSessionException("The session for the user is invalid.");
         } else if (!inboundUserChangePasswordDto.getNewPassword()
                 .equals(inboundUserChangePasswordDto.getControlNewPassword())) {
@@ -218,27 +223,31 @@ public class UserRestService {
         }
     }
 
-    /**
-     * Remove the user in the database
-     *
-     * @param username
-     * @param session
-     * @throws UserNotFoundException
-     * @throws InvalidSessionException
-     * @throws InvalidPasswordException
-     */
 
-    public boolean removeUserByUsername(String username, String password, UUID session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
-        if (session == null) {
+    public void removeUserByUsername(String username, String password, HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
+
+        UUID sessionId = extractSessionId(session);
+        if (sessionId == null) {
             throw new InvalidSessionException("There is no valid session active");
         }
-        User user = checkUserExistence(username);
+        User user = retrieveUser(username);
         logoutUserOnInvalidSession(user);
-        if (ObjectUtils.isEmpty(user.getSession()) || !session.equals(user.getSession()))
+        if (ObjectUtils.isEmpty(user.getSession()) || !sessionId.equals(user.getSession()))
             throw new InvalidSessionException("You are not authorized to delete the account.");
         if (ObjectUtils.isEmpty(password) || !comparePassword(user, password))
             throw new InvalidPasswordException("Passwords do not match");
         userEntityService.removeUser(user);
-        return true;
     }
+
+    private UUID extractSessionId(HttpSession session) throws InvalidSessionException {
+        UUID sessionId;
+        try {
+            sessionId = (UUID) session.getAttribute(sessionIdName);
+        } catch (Exception e) {
+            throw new InvalidSessionException("There is no valid session active");
+        }
+        return sessionId;
+    }
+
+
 }
