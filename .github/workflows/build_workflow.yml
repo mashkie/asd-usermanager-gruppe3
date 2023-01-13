@@ -3,7 +3,7 @@ name: Build and Test
 on: [push]
 
 jobs:
-  run_tests:
+  build_only:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
