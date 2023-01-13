@@ -56,7 +56,7 @@ public class PasswordChangeRestController {
             }
     )
     public ResponseEntity<Object> changePassword(@PathVariable String username, @Valid @RequestBody InboundUserChangePasswordDto inboundUserChangePasswordDto, HttpSession session) throws InvalidSessionException, UserNotFoundException, InvalidPasswordException {
-        userService.changePassword(username, inboundUserChangePasswordDto, (UUID) session.getAttribute(sessionIdName));
+        userService.changePassword(username, inboundUserChangePasswordDto, session);
         return new ResponseEntity<>(new ResponseMessage("Password was changed"), HttpStatus.OK);
     }
 }

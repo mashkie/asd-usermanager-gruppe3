@@ -52,7 +52,8 @@ class RegistrationRestControllerTest {
         this.mockMvc.perform(post("/users/register").content(mapper.writeValueAsString(inboundUserRegistrationDto))
                         .header("Content-Type", "application/json"))
                 .andExpect(content().contentType("application/json"))
-                .andExpect(content().json(mapper.writeValueAsString(userMapper.modelToOutboundDto(userRepository.findByUsername(username)))))
+                .andExpect(content().json(mapper.writeValueAsString(
+                        userMapper.modelToOutboundDto(userRepository.findByUsername(username)))))
                 .andExpect(status().isCreated())
                 .andDo(print());
     }

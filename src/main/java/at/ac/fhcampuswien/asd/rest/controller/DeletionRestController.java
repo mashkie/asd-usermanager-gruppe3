@@ -5,7 +5,6 @@ import at.ac.fhcampuswien.asd.exceptions.InvalidSessionException;
 import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
 import at.ac.fhcampuswien.asd.rest.model.DeleteUserRequest;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
-import at.ac.fhcampuswien.asd.rest.model.ResponseMessage;
 import at.ac.fhcampuswien.asd.rest.service.UserRestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,15 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
-import java.util.UUID;
 
 @RestController
 @CrossOrigin
@@ -32,9 +26,8 @@ import java.util.UUID;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class DeletionRestController {
 
-    UserRestService userRestService;
-
     final static String sessionIdName = "X-SESSION-ID";
+    UserRestService userRestService;
 
     /**
      * Registers the user in the database.
@@ -59,7 +52,7 @@ public class DeletionRestController {
                                          @RequestBody @Valid DeleteUserRequest deleteUserRequest,
                                          HttpSession session) throws UserNotFoundException, InvalidSessionException, InvalidPasswordException {
 
-        userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), (UUID) session.getAttribute(sessionIdName));
+        userRestService.removeUserByUsername(username, deleteUserRequest.getCurrentPassword(), session);
         session.removeAttribute(sessionIdName);
         return new ResponseEntity<>(HttpStatus.OK);
 

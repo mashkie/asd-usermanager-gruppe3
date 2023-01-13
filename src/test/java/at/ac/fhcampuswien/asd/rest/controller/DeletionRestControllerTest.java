@@ -53,17 +53,11 @@ class DeletionRestControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private UserEntityService userEntityService;
 
     @Autowired
     private UserRestService userRestService;
 
     static UUID sessionId;
-
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-
     private UUID sessionID = null;
 
     @BeforeEach

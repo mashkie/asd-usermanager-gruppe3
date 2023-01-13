@@ -24,9 +24,11 @@ import java.util.UUID;
 @RestController
 @CrossOrigin
 @RequiredArgsConstructor
-@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true,
+        level = AccessLevel.PRIVATE)
 @RequestMapping("users")
-@Tag(name = "Users", description = "Endpoints for managing users")
+@Tag(name = "Users",
+        description = "Endpoints for managing users")
 public class SessionRestController {
 
     final static String sessionIdName = "X-SESSION-ID";
@@ -41,12 +43,20 @@ public class SessionRestController {
      */
 
     @PostMapping("/login")
-    @Operation(summary = "Login a user.", tags = {"Users"}, responses = {@ApiResponse(description = "OK", responseCode = "200"), @ApiResponse(description = "User locked", responseCode = "401", content = @Content), @ApiResponse(description = "User or password not correct", responseCode = "401", content = @Content)})
-    public ResponseEntity<Object> login(@RequestBody @Valid InboundUserLoginDto inboundUserLoginDto, HttpSession session) throws AuthenticationException, UserLockedException {
+    @Operation(summary = "Login a user.",
+            tags = {"Users"},
+            responses = {@ApiResponse(description = "OK",
+                    responseCode = "200"), @ApiResponse(description = "User locked",
+                    responseCode = "401",
+                    content = @Content), @ApiResponse(description = "User or password not correct",
+                    responseCode = "401",
+                    content = @Content)})
+    public ResponseEntity<Object> login(@RequestBody @Valid InboundUserLoginDto inboundUserLoginDto,
+                                        HttpSession session) throws AuthenticationException, UserLockedException {
 
         UUID sessionID = UUID.randomUUID();
         session.setAttribute(sessionIdName, sessionID);
-        userService.login(inboundUserLoginDto.getUsername(), inboundUserLoginDto.getPassword(), sessionID);
+        userService.login(inboundUserLoginDto.getUsername(), inboundUserLoginDto.getPassword(), session);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -59,10 +69,18 @@ public class SessionRestController {
      */
 
     @PostMapping("/{username}/logout")
-    @Operation(summary = "Logs out a user.", tags = {"Users"}, responses = {@ApiResponse(description = "OK", responseCode = "200"), @ApiResponse(description = "User not found", responseCode = "404", content = @Content), @ApiResponse(description = "Invalid session", responseCode = "401", content = @Content)})
-    public ResponseEntity<Object> logout(@PathVariable String username, HttpSession session) throws InvalidSessionException, UserNotFoundException {
+    @Operation(summary = "Logs out a user.",
+            tags = {"Users"},
+            responses = {@ApiResponse(description = "OK",
+                    responseCode = "200"), @ApiResponse(description = "User not found",
+                    responseCode = "404",
+                    content = @Content), @ApiResponse(description = "Invalid session",
+                    responseCode = "401",
+                    content = @Content)})
+    public ResponseEntity<Object> logout(@PathVariable String username,
+                                         HttpSession session) throws InvalidSessionException, UserNotFoundException {
 
-        userService.logout(username, (UUID) session.getAttribute(sessionIdName));
+        userService.logout(username, session);
         session.removeAttribute(sessionIdName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
