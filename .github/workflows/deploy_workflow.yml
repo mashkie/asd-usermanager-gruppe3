@@ -1,12 +1,9 @@
 name: Deployment
 on:
-  pull_request:
-    branches:
-      - 'main'
+  # pull_request:
+  #   branches:
+  #     - 'main'
   push:
-    branches:
-      - 'main'
-      - 'feature/**'
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -15,7 +12,7 @@ env:
 
 jobs:
   build:
-    if: github.event.push.branches != 'main'
+    if: contains(github.ref)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -61,7 +58,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-    if: github.event.push.branches == 'main'
+    if: branch = main
     needs: test
     runs-on: ubuntu-latest
     steps:
