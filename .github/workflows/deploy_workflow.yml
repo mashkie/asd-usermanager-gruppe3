@@ -54,7 +54,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-    if: github.ref != 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
