@@ -1,11 +1,11 @@
 name: Deployment
 on:
   pull_request:
-    types:
-      - closed
     branches:
       - 'main'
   push:
+    branches:
+      - 'main'
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
