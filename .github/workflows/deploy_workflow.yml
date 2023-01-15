@@ -58,7 +58,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-#    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -88,3 +88,5 @@ jobs:
         run: echo "::set-output name=date::$(date +'%Y-%m-%d--%M-%S')"
       - name: Build Docker image
         run: docker build . --file Dockerfile --tag $DOCKERHUB_USERNAME/$REPOSITORY_NAME:${{steps.date.outputs.date }}
+      - name: Push image to docker hub
+        run: docker push $DOCKERHUB_USERNAME/$REPOSITORY_NAME:${{ steps.date.outputs.date }}
