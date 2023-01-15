@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'feature/**'
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
