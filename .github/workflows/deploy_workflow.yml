@@ -15,7 +15,7 @@ env:
 
 jobs:
   build:
-    if: github.event.push.branches != main
+    if: github.event.push.branches != 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -35,7 +35,7 @@ jobs:
         with:
           arguments: clean build -x test
   test:
-    if: github.event.push.branches != main
+    if: github.event.push.branches != 'main'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +61,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-    if: github.event.push.branches == main
+    if: github.event.push.branches == 'main'
     needs: test
     runs-on: ubuntu-latest
     steps:
