@@ -8,7 +8,7 @@ env:
 
 jobs:
   build:
-    if: branch != main
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -28,7 +28,7 @@ jobs:
         with:
           arguments: clean build -x test
   test:
-    if: branch != main
+    if: github.ref != 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +54,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-    if: branch = main
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
