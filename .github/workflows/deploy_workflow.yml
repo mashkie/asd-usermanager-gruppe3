@@ -1,11 +1,12 @@
 name: Deployment
 on:
   pull_request:
-    types:
-      - closed
     branches:
       - 'main'
   push:
+    branches:
+      - 'feature/**'
+      - 'main'
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -14,6 +15,7 @@ env:
 
 jobs:
   build:
+    if: contains(github.ref, 'feature')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -33,6 +35,7 @@ jobs:
         with:
           arguments: clean build -x test
   test:
+    if: contains(github.ref, 'feature')
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +61,7 @@ jobs:
           name: Test report
           path: build/reports/tests/test
   deploy:
-    if: github.event.pull_request.merged == true
+    if: contains(github.ref, 'main')
     needs: test
     runs-on: ubuntu-latest
     steps:
