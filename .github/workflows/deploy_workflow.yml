@@ -1,6 +1,5 @@
 name: Deployment
-on:
-  push:
+on: [push]
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -9,7 +8,7 @@ env:
 
 jobs:
   build:
-    if: contains(github.ref)
+    if: branch != main
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -29,7 +28,7 @@ jobs:
         with:
           arguments: clean build -x test
   test:
-    if: github.event.push.branches != 'main'
+    if: branch != main
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +55,6 @@ jobs:
           path: build/reports/tests/test
   deploy:
     if: branch = main
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
