@@ -32,8 +32,8 @@ public class User {
     Long lockedUntil = null;
     Long sessionValidUntil;
     UUID session;
-    private byte[] password;
-    private byte[] salt;
+    byte[] password;
+    byte[] salt;
 
     public User(Long id, String username, String firstName, String lastName, int failedLoginCounter, String password) {
         this.id = id;
@@ -54,4 +54,6 @@ public class User {
     public void refreshSession() {
         this.sessionValidUntil = new Date().getTime() + VALID_SESSION_TIME;
     }
+
+
 }

@@ -3,7 +3,6 @@ package at.ac.fhcampuswien.asd.entity.services;
 import at.ac.fhcampuswien.asd.entity.models.User;
 import at.ac.fhcampuswien.asd.entity.repository.UserRepository;
 import at.ac.fhcampuswien.asd.exceptions.UserAlreadyExistsException;
-import at.ac.fhcampuswien.asd.exceptions.UserNotFoundException;
 import at.ac.fhcampuswien.asd.rest.mapper.UserMapper;
 import at.ac.fhcampuswien.asd.rest.model.InboundUserRegistrationDto;
 import at.ac.fhcampuswien.asd.rest.model.OutboundUserRegistrationDto;
@@ -40,9 +39,9 @@ public class UserEntityService {
         if (checkUserExistence(userDto.getUsername())) {
             throw new UserAlreadyExistsException("The username is already taken!");
         }
-        User user = userMapper.inboundToModel(userDto);
-        userRepository.save(user);
-        return userMapper.modelToOutboundDto(user);
+        User inputUser = userMapper.inboundToModel(userDto);
+        User savedUser = userRepository.save(inputUser);
+        return userMapper.modelToOutboundDto(savedUser);
     }
 
     public User incrementFailedLoginCount(User user) {
@@ -50,13 +49,12 @@ public class UserEntityService {
         return userRepository.save(user);
     }
 
-    public User resetFailedCounter(User user) {
+    public void resetFailedCounter(User user) {
         user.setFailedLoginCounter(0);
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
     public User setLockTime(User user) {
-
 
         Long lockTime = new Date(new Date().getTime() + Duration.ofSeconds(60)
                 .toMillis()).getTime();
@@ -84,7 +82,7 @@ public class UserEntityService {
         return userRepository.save(user);
     }
 
-    public OutboundUserRegistrationDto removeUser(User user) throws UserNotFoundException {
+    public OutboundUserRegistrationDto removeUser(User user) {
         userRepository.delete(user);
         return userMapper.modelToOutboundDto(user);
     }
