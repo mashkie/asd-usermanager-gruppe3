@@ -1,8 +1,5 @@
 name: Deployment
 on:
-  # pull_request:
-  #   branches:
-  #     - 'main'
   push:
 
 env:
